@@ -8,7 +8,7 @@ CPT:
 =true,0.001
 
 Var E
-Values: true,falses
+Values: true,false
 Parents: none
 CPT:
 =true,0.002

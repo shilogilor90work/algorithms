@@ -9,26 +9,43 @@ import java.util.PriorityQueue;
 import java.util.Comparator;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Arrays;
 
 
 class Node {
   String Var;
-  String Values;
-  List<Node> Parents;
+  String [] Values;
+  List<String> Parents;
   Hashtable<String, Double> CPT;
-  Node(String Var, String Values, List<Node> Parents, Hashtable<String, Double> CPT){
+  Node(String Var, String[] Values, List<String> Parents, Hashtable<String, Double> CPT){
     this.Var = Var;
     this.Values = Values;
     this.Parents = Parents;
     this.CPT = CPT;
   }
+  String [] get_value_options(){
+    return Values;
+  }
   double get_value(String value){
-    return 0.0;
+    return CPT.get(value);
+  }
+  public String get_name(){
+    return Var;
+  }
+  public double get_prob(Hashtable<String, String> name_value){
+    String key_of_CPT = "";
+    for (String parent : Parents) {
+      if(parent != null && !parent.isEmpty()){
+        key_of_CPT = key_of_CPT + name_value.get(parent) + ",";
+      }
+    }
+    key_of_CPT = key_of_CPT + name_value.get(Var);
+    return CPT.get(key_of_CPT);
   }
   public String toString()
   {
-    String a = "\nname:" + Var + " , values:" + Values + " , Parents: ";
-    for (Node node : Parents) {
+    String a = "\nname:" + Var + " , values:" + Arrays.toString(Values) + " , Parents: ";
+    for (String node : Parents) {
          a = a + node;
     }
     a = a + " , CPT: ";
