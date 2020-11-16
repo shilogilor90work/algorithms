@@ -23,6 +23,9 @@ class Node {
     this.Parents = Parents;
     this.CPT = CPT;
   }
+  List<String> get_parents() {
+    return Parents;
+  }
   String [] get_value_options(){
     return Values;
   }

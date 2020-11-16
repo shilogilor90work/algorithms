@@ -18,6 +18,8 @@ import java.util.Iterator;
 
 public class Ex1 {
   static Hashtable<String, Node> Nodes_list = new Hashtable<String, Node>();
+  static int plus = 0;
+  static int times = 0;
   /**
    * deeply clones a Map by cloning all the values.
    */
@@ -57,27 +59,62 @@ public class Ex1 {
     Hashtable<String, String> base_options = new Hashtable<String, String>();
     Hashtable<String, Node> nodes_left_copy = deepCopy_node(Nodes_list);
     String[] conditions_facts = conditions.split(",");
+
     for (int i = 0; i<conditions_facts.length; i++){
       String [] name_value = conditions_facts[i].split("=");
       base_options.put(name_value[0], name_value[1]);
       nodes_left_copy.remove(name_value[0]);
     }
 
-    double given_fact = get_all_permutations_chance(base_options, nodes_left_copy);
-    String[] search_facts = prob_search.split(",");
-    for (int i = 0; i<search_facts.length; i++){
-      String [] name_value = search_facts[i].split("=");
-      base_options.put(name_value[0], name_value[1]);
-      nodes_left_copy.remove(name_value[0]);
+    double this_case_true = 0.0;
+    double this_case_false = 0.0;
+    String [] this_prob_value = prob_search.split("=");
+    String [] prob_values_options = Nodes_list.get(this_prob_value[0]).get_value_options();
+    boolean flag = false;
+    List<String> this_node_parents = Nodes_list.get(this_prob_value[0]).get_parents();
+    Set<String> keys = base_options.keySet();
+    if (this_node_parents.size() == base_options.size()) {
+      for (String node_name: this_node_parents){
+        if (!keys.contains(node_name)) {
+          flag = false;
+          break;
+        } else {
+          flag = true;
+        }
+      }
+    }
+    if (flag) {
+      base_options.put(this_prob_value[0], this_prob_value[1]);
+      return Nodes_list.get(this_prob_value[0]).get_prob(base_options);
     }
 
-    double search_fact = get_all_permutations_chance(base_options, nodes_left_copy);
-    return search_fact/given_fact;
+    for (int i = 0; i<prob_values_options.length; i++){
+      base_options.put(this_prob_value[0], prob_values_options[i]);
+      nodes_left_copy.remove(this_prob_value[0]);
+      double given_fact = get_all_permutations_chance(base_options, nodes_left_copy, 0.0);
+      if (this_prob_value[1].equals(prob_values_options[i])){
+        if (this_case_true==0){
+          this_case_true = given_fact;
+        } else {
+          plus ++;
+          this_case_true = this_case_true + given_fact;
+        }
+      } else {
+        if (this_case_false==0) {
+          this_case_false = given_fact;
+        } else {
+          plus ++;
+          this_case_false = this_case_false + given_fact;
+        }
+      }
+    }
+    plus ++;
+    return this_case_true/(this_case_false+this_case_true);
+
   }
-  static public double get_all_permutations_chance(Hashtable<String, String> base_options , Hashtable<String, Node> nodes_left_copy){
+  static public double get_all_permutations_chance(Hashtable<String, String> base_options , Hashtable<String, Node> nodes_left_copy, double sum_chance){
     ArrayList<Hashtable<String, String>> all_permutations = new ArrayList<Hashtable<String, String>>();
     all_permutations = get_all_permutations_recursive(all_permutations, base_options, new ArrayList<Node>(deepCopy_node(nodes_left_copy).values()));
-    double sum_chance = 0;
     for (Hashtable<String, String> single_permutation : all_permutations) {
       Set<String> keys = Nodes_list.keySet();
 
@@ -89,9 +126,20 @@ public class Ex1 {
       while (itr.hasNext()) {
          // Getting Key
          String name = itr.next();
-         mul_chance = mul_chance * Nodes_list.get(name).get_prob(single_permutation);
+         if (mul_chance==1){
+           mul_chance=Nodes_list.get(name).get_prob(single_permutation);
+         } else {
+           times ++;
+           mul_chance = mul_chance * Nodes_list.get(name).get_prob(single_permutation);
+         }
       }
-      sum_chance = sum_chance + mul_chance;
+      if (sum_chance==0){
+        sum_chance = mul_chance;
+      }
+      else {
+        plus++;
+        sum_chance = sum_chance + mul_chance;
+      }
     }
     return sum_chance;
 
@@ -112,9 +160,6 @@ public class Ex1 {
     }
     return all_permutations;
   }
-  // double get_prob(Node node, String parents){
-  //   return node.get_value(parents);
-  // }
 
 /**
  * Main
@@ -160,18 +205,18 @@ public class Ex1 {
                 CPT.put(starter+name_value[0],Double.parseDouble(name_value[1]));
                 sum_prob = sum_prob + Double.parseDouble(name_value[1]);
               }
-              CPT.put(starter+Values[Values.length-1],(double)Math.round((1-sum_prob) * 100000d) / 100000d);
+              CPT.put(starter + Values[Values.length-1], (double)Math.round((1-sum_prob) * 100000d) / 100000d);
               line = myReader.nextLine();
             }
-            Node temp = new Node(node_name, Values, Parents, CPT);
-            Nodes_list.put(node_name, temp);
-            System.out.println(temp);
+            Nodes_list.put(node_name, new Node(node_name, Values, Parents, CPT));
           } else if (next_line.startsWith("Queries")){
             while (myReader.hasNext())
             {
+              plus = 0;
+              times = 0;
               line = myReader.nextLine();
               if (line.endsWith("1")){
-                System.out.println(algorithm_1(Nodes_list, line));
+                System.out.println(algorithm_1(Nodes_list, line) + "," + plus + "," + times);
               }
               // need to anylise query
               System.out.println(line);
